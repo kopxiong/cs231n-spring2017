@@ -1,0 +1,29 @@
+1. Pros and Cons of Nearest Neighbor classifier.
+Cons:
+a. The classifier must remember all of the training data and store it for future comparisons with the test data.
+   This is space inefficient because datasets may easily be gigabytes in size.
+b. Classifying a test image is expensive since it requires a comparison to all training images.
+
+2. Approximate Nearest Neighbors (ANN)
+
+3. As alluded to in the previous section
+
+4. Activation function:
+a. Sigmoid
+(+) Nice interpretation as the firing rate of a neuron:
+from not firing at all (0) to fully-saturated firing at an assumed maximum frequency (1)
+(-) Sigmoids saturate and kill gradients
+(-) Sigmoid outputs are not zero-centered
+b. Tanh
+A scaled sigmoid function, but zero-centered.
+c. ReLU
+(+) Greatly accelerates the convergence of SGD
+(+) Less expensive operations
+(-) ReLU units can be fragile during training and can “die”
+d. Leaky ReLU ------>  PReLU (Parametric Rectified Linear Unit)
+e. Maxout (Maxout Networks https://arxiv.org/pdf/1302.4389.pdf)
+(+) Generalizes the ReLU and its leaky version
+(-) Doubled number of parameters
+
+5. Larger Neural Networks can represent more complicated functions.
+Neural Networks are non-convex.
