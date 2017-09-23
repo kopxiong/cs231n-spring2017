@@ -26,4 +26,4 @@ e. Maxout (Maxout Networks https://arxiv.org/pdf/1302.4389.pdf)
 (-) Doubled number of parameters
 
 5. Larger Neural Networks can represent more complicated functions.
-Neural Networks are non-convex.
+Neural Networks (usually with non-linear activation functions) are non-convex.
