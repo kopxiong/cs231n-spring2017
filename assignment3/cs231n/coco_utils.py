@@ -1,7 +1,7 @@
 from builtins import range
 import os, json
 import numpy as np
-import h5py
+import h5py    # sudo apt-get install python-h5py
 
 BASE_DIR = 'cs231n/datasets/coco_captioning'
 

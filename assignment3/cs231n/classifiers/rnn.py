@@ -137,7 +137,32 @@ class CaptioningRNN(object):
         # defined above to store loss and gradients; grads[k] should give the      #
         # gradients for self.params[k].                                            #
         ############################################################################
-        pass
+
+        # 1. Forward pass
+        # (1) Affine transformation (image features --> initial hidden state)
+        h0, cache_h0 = affine_forward(features, W_proj, b_proj)
+
+        # (2) Word embedding layer (indices --> word vectors)
+        word2vec, cache_word2vec = word_embedding_forward(captions_in, W_embed)
+
+        # (3) RNN (word vectors --> hidden state vectors)
+        h_rnn, cache_rnn = rnn_forward(word2vec, h0, Wx, Wh, b)
+
+        # (4) Temporal affine transformation
+        scores, cache_scores = temporal_affine_forward(h_rnn, W_vocab, b_vocab)
+
+        # (5) Temporal softmax loss
+        loss, dscores = temporal_softmax_loss(scores, captions_out, mask, verbose=False)
+
+        # 2. Backward pass (try dict.fromkeys(self.params))
+        dh_rnn, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dscores, cache_scores)
+
+        dword2vec, dh0, grads['Wx'], grads['Wh'], grads['b'] = rnn_backward(dh_rnn, cache_rnn)
+
+        grads['W_embed'] = word_embedding_backward(dword2vec, cache_word2vec)
+
+        dfeatures, grads['W_proj'], grads['b_proj'] = affine_backward(dh0, cache_h0)
+
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -199,7 +224,37 @@ class CaptioningRNN(object):
         # functions; you'll need to call rnn_step_forward or lstm_step_forward in #
         # a loop.                                                                 #
         ###########################################################################
-        pass
+
+        h0, _ = affine_forward(features, W_proj, b_proj)
+
+        captions[:, 0] = self._start
+        #print("captions: ", captions)
+
+        prev_h = h0
+
+        # The first word that you feed to the RNN should be the <START> token
+        current_word = self._start * np.ones((N, 1), dtype=np.int32)
+        #print("current_word(before): ", current_word.shape)
+        #current_word = captions[:, 0]
+        #print("current_word(after): ", current_word.shape)
+
+        for t in xrange(max_length):
+            word2vec, _ = word_embedding_forward(current_word, W_embed)
+
+            # here not use rnn_forward, so np.squeeze()
+            next_h, _ = rnn_step_forward(np.squeeze(word2vec), prev_h, Wx, Wh, b)
+
+            scores, _ = temporal_affine_forward(next_h[:, np.newaxis, :], W_vocab, b_vocab)
+            #print(scores.shape)    # (2, 2, 1004)
+            idx = np.squeeze(np.argmax(scores, axis=2))
+            #print(idx.shape)    # (2,)
+
+            captions[:, t] = idx
+
+            prev_h = next_h
+            current_word = captions[:, t]
+            #print("current_word(loop): ", current_word.shape)
+
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################

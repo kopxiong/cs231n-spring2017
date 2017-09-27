@@ -27,3 +27,39 @@ e. Maxout (Maxout Networks https://arxiv.org/pdf/1302.4389.pdf)
 
 5. Larger Neural Networks can represent more complicated functions.
 Neural Networks (usually with non-linear activation functions) are non-convex.
+
+6. Difference between *args and **kwargs, see
+https://stackoverflow.com/questions/3394835/args-and-kwargs,
+*args:    positional arguments
+**kwargs: keyword arguments,      example: captioning_solver.py
+
+def func(required_arg, *args, **kwargs):
+    # required_arg is a positional-only parameter.
+    print required_arg
+
+    # args is a tuple of positional arguments,
+    # because the parameter name has * prepended.
+    if args: # If args is not empty.
+        print args
+
+    # kwargs is a dictionary of keyword arguments,
+    # because the parameter name has ** prepended.
+    if kwargs: # If kwargs is not empty.
+        print kwargs
+
+>>> func()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: func() takes at least 1 argument (0 given)
+
+>>> func("required argument")
+required argument
+
+>>> func("required argument", 1, 2, '3')
+required argument
+(1, 2, '3')
+
+>>> func("required argument", 1, 2, '3', keyword1=4, keyword2="foo")
+required argument
+(1, 2, '3')
+{'keyword2': 'foo', 'keyword1': 4}
