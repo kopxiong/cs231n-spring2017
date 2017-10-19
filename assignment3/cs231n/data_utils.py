@@ -247,11 +247,11 @@ def load_imagenet_val(num=None):
     """
     imagenet_fn = 'cs231n/datasets/imagenet_val_25.npz'
     if not os.path.isfile(imagenet_fn):
-      print('file %s not found' % imagenet_fn)
-      print('Run the following:')
-      print('cd cs231n/datasets')
-      print('bash get_imagenet_val.sh')
-      assert False, 'Need to download imagenet_val_25.npz'
+        print('file %s not found' % imagenet_fn)
+        print('Run the following:')
+        print('cd cs231n/datasets')
+        print('bash get_imagenet_val.sh')
+        assert False, 'Need to download imagenet_val_25.npz'
     f = np.load(imagenet_fn)
     X = f['X']
     y = f['y']

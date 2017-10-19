@@ -145,22 +145,38 @@ class CaptioningRNN(object):
         # (2) Word embedding layer (indices --> word vectors)
         word2vec, cache_word2vec = word_embedding_forward(captions_in, W_embed)
 
-        # (3) RNN (word vectors --> hidden state vectors)
-        h_rnn, cache_rnn = rnn_forward(word2vec, h0, Wx, Wh, b)
+        # RNN model
+        if self.cell_type == 'rnn':
+            # (3) RNN (word vectors --> hidden state vectors)
+            h_rnn, cache_rnn = rnn_forward(word2vec, h0, Wx, Wh, b)
 
-        # (4) Temporal affine transformation
-        scores, cache_scores = temporal_affine_forward(h_rnn, W_vocab, b_vocab)
+            # (4) Temporal affine transformation
+            scores, cache_scores = temporal_affine_forward(h_rnn, W_vocab, b_vocab)
+
+        # LSTM model
+        elif self.cell_type == 'lstm':
+            # (3) LSTM (word vectors --> hidden state vectors)
+            h_lstm, cache_lstm = lstm_forward(word2vec, h0, Wx, Wh, b)
+
+            # (4) Temporal affine transformation
+            scores, cache_scores = temporal_affine_forward(h_lstm, W_vocab, b_vocab)
+
+        else:
+            raise ValueError('Invalid cell_type "%s"' % cell_type)
 
         # (5) Temporal softmax loss
         loss, dscores = temporal_softmax_loss(scores, captions_out, mask, verbose=False)
 
         # 2. Backward pass (try dict.fromkeys(self.params))
-        dh_rnn, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dscores, cache_scores)
+        if self.cell_type == 'rnn':
+            dh_rnn, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dscores, cache_scores)
+            dword2vec, dh0, grads['Wx'], grads['Wh'], grads['b'] = rnn_backward(dh_rnn, cache_rnn)
 
-        dword2vec, dh0, grads['Wx'], grads['Wh'], grads['b'] = rnn_backward(dh_rnn, cache_rnn)
+        elif self.cell_type == 'lstm':
+            dh_lstm, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dscores, cache_scores)
+            dword2vec, dh0, grads['Wx'], grads['Wh'], grads['b'] = lstm_backward(dh_lstm, cache_lstm)
 
         grads['W_embed'] = word_embedding_backward(dword2vec, cache_word2vec)
-
         dfeatures, grads['W_proj'], grads['b_proj'] = affine_backward(dh0, cache_h0)
 
         ############################################################################
@@ -225,32 +241,26 @@ class CaptioningRNN(object):
         # a loop.                                                                 #
         ###########################################################################
 
-        h0, _ = affine_forward(features, W_proj, b_proj)
-
+        h0, _          = affine_forward(features, W_proj, b_proj)
         captions[:, 0] = self._start
-        #print("captions: ", captions)
-
-        prev_h = h0
+        prev_h         = h0
+        c              = np.zeros_like(features)
 
         # The first word that you feed to the RNN should be the <START> token
         current_word = self._start * np.ones((N, 1), dtype=np.int32)
-        #print("current_word(before): ", current_word.shape)
-        #current_word = captions[:, 0]
-        #print("current_word(after): ", current_word.shape)
 
         for t in xrange(max_length):
             word2vec, _ = word_embedding_forward(current_word, W_embed)
 
-            # here not use rnn_forward, so np.squeeze()
-            next_h, _ = rnn_step_forward(np.squeeze(word2vec), prev_h, Wx, Wh, b)
+            if self.cell_type == 'rnn':
+                # here not use rnn_forward, so np.squeeze()
+                next_h, _ = rnn_step_forward(np.squeeze(word2vec), prev_h, Wx, Wh, b)
+            elif self.cell_type == 'lstm':
+                next_h, c, cache = lstm_step_forward(np.squeeze(word2vec), prev_h, c, Wx, Wh, b)
 
             scores, _ = temporal_affine_forward(next_h[:, np.newaxis, :], W_vocab, b_vocab)
-            #print(scores.shape)    # (2, 2, 1004)
             idx = np.squeeze(np.argmax(scores, axis=2))
-            #print(idx.shape)    # (2,)
-
             captions[:, t] = idx
-
             prev_h = next_h
             current_word = captions[:, t]
             #print("current_word(loop): ", current_word.shape)
