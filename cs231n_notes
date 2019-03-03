@@ -63,3 +63,15 @@ required argument
 required argument
 (1, 2, '3')
 {'keyword2': 'foo', 'keyword1': 4}
+
+7. A learning algorithm that can reduce the chance of fitting noise is called robust.
+L1 loss function is robust, unstable solution, possibly multiple solutions.
+L2 loss function is not very robust, stable solution, always one solution.
+
+8. Regularization is a very important technique in machine learning to prevent overfitting. 
+L1 regularization: Computational inefficient in non-sparse cases, sparse outputs, built-in feature selection.
+L2 regularization: Computational efficient due to have analytic solutions, non-sparse outputs, no feature selection.
+Max norm constraints
+Dropout
+
+9. Linear regression vs Logistic regression
